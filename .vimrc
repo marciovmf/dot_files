@@ -1,7 +1,7 @@
 ﻿""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Marciovmf (N)VIM config
 " https://github.com/marciovmf/vimstuff
-" @version: 2.01
+" @version: 2.03
 " @changelog:
 " - fold metod for /**/ displays the content of the first non-empty line
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -61,6 +61,9 @@
 
 " -PLUGINS---------------------------------------------------------------------
   call plug#begin('~/.vim/plugged')
+
+  " -PROJECT RUNNER --------------
+    Plug 'marciovmf/projection'
 
   " -SMOOTH SCROLLING-------------
   "  Plug 'joeytwiddle/sexy_scroller.vim'
@@ -126,6 +129,7 @@
   Plug 'Alligator/accent.vim'
   Plug 'jacoborus/tender.vim'
   Plug 'kxzk/skull-vim'
+  Plug 'projekt0n/github-nvim-theme'
 
 
   call plug#end()
@@ -285,61 +289,11 @@ endfunction
 
 
 " -Building--------------------------------------------------------------------
-  compiler msvc
-  
-  function! Build()
-    :silent make clean
-    :silent make
-    :cw
-    :redraw!
-  endfunction
-  
-  function! Clean()
-    :silent make clean
-  endfunction
-  
-  function! SetCMakeMakeprg()
-    set makeprg=cmake
-  endfunction
-  
-  function! SetNMakeMakeprg()
-    set makeprg=nmake
-  endfunction
-  
-  function! SetMakeMakeprg()
-    set makeprg=make
-  endfunction
-  
-  function! Clean()
-    :silent make clean
-  endfunction
-  
-  function! Build()
-    ":silent cmake --build .\build --target clean
-    :silent make 
-    :silent call ShowBuildOutput()
-  endfunction
-  
-  function! Rebuild()
-    :silent call Clean()
-    :silent call Build()
-  endfunction
-  
-  function! ShowBuildOutput()
-    :cw
-    :redraw!
-  endfunction
-  
-  call SetMakeMakeprg() " Use Make as default make program
-  
   set errorformat+=\\\ %#%f(%l)\ :\ %#%t%[A-z]%#\ %m
   set errorformat+=,%f:\ error\ %s:%m
   set errorformat+=,%f:\ fatal\ error\ %s:%m
   autocmd VimResized * :wincmd =
   
-  " Rebuild
-  nmap <F9> :silent call Build()<cr>
-  nmap <F10> :silent call Rebuild()<cr>
   nmap <script> <silent> <F4> :call ToggleQuickfix()<cr>
   
   " Quickfix
@@ -390,71 +344,11 @@ endfunction
     set fillchars+=vert:\ 
   endfunction
 
-  colo simple
+  colo github_light
   "set guifont=FiraCode\ Nerd\ Font:h9
-  set guifont=Fira\ Code:h9
+  "set guifont=Roboto\ Mono\ for\ Powerline:h11
+  set guifont=Cascadia\ Code:h11
   autocmd ColorScheme * call OnThemeReload()
-
-
-" -Project file loading--------------------------------------------------------
-  let g:project#name = ""
-  let g:vimprj#currentProjectName = ""
-
-  function! UpdateTitleBar()
-    let l:completionStatus = ""
-    if g:nvimCmpEnabled == v:true
-      let l:completionStatus = "\t[ 🧩 Autocompletion enabled ]"
-    endif
-
-    if g:nvimLSPEnabled == v:true
-      let l:completionStatus .= "\t[ 🧩 LSP enabled ]"
-    endif
-
-    let iconList = { 'qf':'🔧', 'help':'🎓', 'netrw':'📁', 'default':'🗒️', '':'❓' }
-
-    let icon = iconList["default"]
-    if has_key(iconList, &filetype)
-      let icon = iconList[&filetype]
-    endif
-
-    let l:fileName = expand("%t")
-    if len(l:fileName) == 0
-      let l:fileName = &filetype
-    endif
-
-    let l:fileName = icon . l:fileName
-
-    let &titlestring = g:vimprj#currentProjectName . " :: " . l:fileName . l:completionStatus
-  endfunction
-
-  function! CheckProjectVim()
-    let file_path = getcwd() . "/project.vim"
-    if filereadable(file_path)
-      execute "source" file_path
-      let g:vimprj#currentProjectName = g:project#name
-    else
-      let g:vimprj#currentProjectName = nr2char(0x1F4C1) . getcwd()
-    endif
-    call UpdateTitleBar()
-  endfunction
-
-  function! LoadProjectCommand(path)
-    Clear
-    execute "cd " . a:path
-    let sessionFile = a:path . "/Session.vim"
-    execute "source " . sessionFile
-    call CheckProjectVim()
-  endfunction
-
-  augroup dirchange
-    autocmd!
-    autocmd! dirChanged * call CheckProjectVim()
-    autocmd BufEnter * call UpdateTitleBar()
-  augroup END
-
-  command! -nargs=1 Project :silent! call LoadProjectCommand(<q-args>)
-
-  call CheckProjectVim()
 
 "--Skeleton files -------------------------------------------------------------
 function! UpdateSkeletonBuffer(extension)
