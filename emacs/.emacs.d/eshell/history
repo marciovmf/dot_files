@@ -1,0 +1,28 @@
+ls
+pwd
+who
+whois
+cls
+ls -;
+ls -l
+grep 
+cd demo/ 
+ls
+cd ..
+generate_game_solution.bat 
+cat generate_game_solution.bat 
+generate_game_solution.bat 
+cd demo/ 
+ls
+cd bin/ 
+cls
+clear
+ls -l
+rm -Rfv Debug/
+ls
+cd ..
+cd ..
+ls demo/bin/Debug/
+ldk_launcher.exe runtree/demo.ini 
+demo/bin/Debug/ldk_launcher.exe runtree/demo.ini 
+exit 

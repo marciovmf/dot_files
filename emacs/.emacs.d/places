@@ -1,0 +1,84 @@
+;;; -*- coding: utf-8; mode: lisp-data -*-
+(("c:/work/vimstuff/readme.md" . 95)
+ ("c:/work/ldk/demo/" (dired-filename . "c:/work/ldk/demo/.ldk"))
+ ("c:/work/ldk/demo/.ldk/"
+  (dired-filename . "c:/work/ldk/demo/.ldk/Debug"))
+ ("c:/work/ldk/" (dired-filename . "c:/work/ldk/src"))
+ ("c:/work/ldk/src/"
+  (dired-filename . "c:/work/ldk/src/ldk_game_metadata.c"))
+ ("c:/work/ldk/CMakePresets.json" . 2252)
+ ("c:/work/ldk/generate_debug.bat" . 23)
+ ("c:/work/ldk/CMakeLists.txt" . 17964)
+ ("c:/work/ldk/demo/demo.c" . 5508)
+ ("c:/work/ldk/include/ldk_common.h" . 602)
+ ("c:/work/ldk/src/ldk.c" . 19232)
+ ("c:/work/ldk/include/ldk_game.h" . 3)
+ ("c:/work/ldk/src/tools/ldk_tool_comet.c" . 1408)
+ ("c:/work/ldk/demo/.ldk/Debug/generated/generated_component_metadata.h"
+  . 253)
+ ("c:/Users/marciovmf/AppData/Roaming/.emacs.d/init.el" . 6599)
+ ("c:/work/ldk/src/ldk_game_metadata.c" . 133)
+ ("d:/tools/emacs/emacs-30.1/share/emacs/30.1/etc/COPYING" . 30778)
+ ("c:/work/ldk/src/ldk_app_launcher.c" . 686)
+ ("c:/work/ldk/.clangd" . 38)
+ ("c:/work/ldk/demo/.ldk/Debug/"
+  (dired-filename . "c:/work/ldk/demo/.ldk/Debug/generated"))
+ ("c:/work/ldk/demo/.ldk/Debug/generated/"
+  (dired-filename
+   . "c:/work/ldk/demo/.ldk/Debug/generated/generated_component_metadata.h"))
+ ("c:/work/ldk/generate_game_solution.bat" . 84)
+ ("c:/work/ldk/src/tools/" (dired-filename . "c:/work/ldk/src"))
+ ("c:/work/" (dired-filename . "c:/work/ldk"))
+ ("c:/Users/marciovmf/AppData/Roaming/.emacs.d/"
+  (dired-filename
+   . "c:/Users/marciovmf/AppData/Roaming/.emacs.d/init.el"))
+ ("c:/Users/marciovmf/AppData/Roaming/.emacs.d/early-init.el" . 34)
+ ("d:/tools/emacs/emacs-30.1/share/emacs/30.1/lisp/files.el" . 98930)
+ ("c:/Users/marciovmf/AppData/Roaming/"
+  (dired-filename . "c:/Users/marciovmf/AppData"))
+ ("c:/Users/marciovmf/AppData/"
+  (dired-filename . "c:/Users/marciovmf"))
+ ("c:/Users/" (dired-filename . "c:/Users/marciovmf"))
+ ("c:/Users/marciovmf/Documents/"
+  (dired-filename . "c:/Users/marciovmf"))
+ ("c:/Users/marciovmf/Pictures/25437129.png" . 1592)
+ ("c:/Users/marciovmf/"
+  (dired-filename . "c:/Users/marciovmf/Pictures"))
+ ("c:/Users/marciovmf/Pictures/"
+  (dired-filename . "c:/Users/marciovmf/Pictures/Screenshots"))
+ ("c:/Users/marciovmf/Pictures/Screenshots/" . 3282)
+ ("c:/" (dired-filename . "c:/work"))
+ ("c:/work/stdx/" (dired-filename . "c:/work/stdx/.clangd"))
+ ("c:/work/ldk/include/" (dired-filename . "c:/work/ldk/include/stdx"))
+ ("c:/work/ldk/include/stdx/" . 1006)
+ ("c:/work/ldk/include/stdx/stdx_time.h" . 1241)
+ ("c:/work/ldk/include/stdx/stdx_test.h" . 6682)
+ ("c:/work/ldk/include/component/ldk_transform.h" . 883)
+ ("c:/work/ldk/include/component/ldk_camera.h" . 3)
+ ("c:/work/ldk/include/editor/"
+  (dired-filename . "c:/work/ldk/include/editor/ldk_component_meta.h"))
+ ("c:/work/ldk/src/module/ldk_ui.c" . 3298)
+ ("c:/work/ldk/.gitignore" . 309)
+ ("c:/work/ldk/include/module/ldk_ui.h" . 10640)
+ ("c:/work/ldk/.git/info/" (dired-filename . "c:/work/ldk/.git"))
+ ("c:/work/ldk/.git/objects/" (dired-filename . "c:/work/ldk/.git"))
+ ("c:/work/ldk/.git/logs/" (dired-filename . "c:/work/ldk/.git"))
+ ("c:/work/ldk/.git/hooks/" (dired-filename . "c:/work/ldk/.git"))
+ ("c:/work/ldk/.git/" (dired-filename . "c:/work/ldk/.git/config"))
+ ("c:/work/ldk/.git/config" . 507)
+ ("c:/Users/marciovmf/AppData/Roaming/.emacs.d/lisp/my-project-dashboard.el"
+  . 5505)
+ ("c:/work/ldk/src/ldk_os_win32.c" . 22588)
+ ("c:/work/ldk/.cache/" (dired-filename . "c:/work/ldk"))
+ ("d:/tools/emacs/emacs-30.1/bin/"
+  (dired-filename . "d:/tools/emacs/emacs-30.1"))
+ ("d:/tools/emacs/emacs-30.1/" (dired-filename . "d:/tools/emacs"))
+ ("d:/tools/emacs/" (dired-filename . "d:/tools/emacs/emacs-30.1"))
+ ("c:/work/ldk/include/stdx/stdx_string.h" . 1367)
+ ("c:/work/ldk/src/component/ldk_camera.c" . 4027)
+ ("c:/work/ldk/include/ldk.h" . 277)
+ ("c:/work/ldk/include/stdx/stdx_filesystem.h" . 1194)
+ ("c:/work/ldk/include/stdx/stdx_io.h" . 6091)
+ ("c:/Users/marciovmf/AppData/Roaming/.emacs.d/custom_themes/jblow-nostalgia-theme.el"
+  . 2070)
+ ("c:/work/ldk/include/stdx/stdx_common.h" . 436))

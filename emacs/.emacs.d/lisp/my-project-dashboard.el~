@@ -1,0 +1,237 @@
+;; 
+;; Custom project dashboard
+;;
+(require 'button)
+(require 'button)
+(require 'nerd-icons nil t)
+(require 'projectile)
+(require 'recentf)
+(require 'seq)
+(require 'subr-x)
+
+(recentf-mode 1)
+
+(defvar my-project-dashboard-recent-file-count 8
+  "Number of recent project files shown in the project dashboard.")
+
+(defvar-local my-project-dashboard-root nil)
+(defvar-local my-project-dashboard-name nil)
+(defvar-local my-project-dashboard-recent-files nil)
+
+(defun my-project-dashboard--run (command)
+  (unless my-project-dashboard-root
+    (user-error "No project associated with this dashboard"))
+  (let ((default-directory my-project-dashboard-root))
+    (call-interactively command)))
+
+(defun my-project-dashboard-find-file ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-find-file))
+
+(defun my-project-dashboard-recent-file ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-recentf))
+
+(defun my-project-dashboard-switch-buffer ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-switch-to-buffer))
+
+(defun my-project-dashboard-search ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-rg))
+
+(defun my-project-dashboard-vc ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-vc))
+
+(defun my-project-dashboard-compile ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-compile-project))
+
+(defun my-project-dashboard-test ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-test-project))
+
+(defun my-project-dashboard-run ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-run-project))
+
+(defun my-project-dashboard-dired ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-dired))
+
+(defun my-project-dashboard-kill-buffers ()
+  (interactive)
+  (my-project-dashboard--run #'projectile-kill-buffers))
+
+(defun my-project-dashboard-open-recent-by-number ()
+  (interactive)
+  (let* ((index (- last-command-event ?1))
+         (file (nth index my-project-dashboard-recent-files)))
+    (unless file
+      (user-error "No recent file for key %c" last-command-event))
+    (find-file file)))
+
+(defvar my-project-dashboard-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Recent files 1-9.
+    (define-key map (kbd "1") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "2") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "3") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "4") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "5") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "6") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "7") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "8") #'my-project-dashboard-open-recent-by-number)
+    (define-key map (kbd "9") #'my-project-dashboard-open-recent-by-number)
+
+    ;; Actions.
+    (define-key map (kbd "f") #'my-project-dashboard-find-file)
+    (define-key map (kbd "e") #'my-project-dashboard-recent-file)
+    (define-key map (kbd "b") #'my-project-dashboard-switch-buffer)
+    (define-key map (kbd "s") #'my-project-dashboard-search)
+    (define-key map (kbd "v") #'my-project-dashboard-vc)
+    (define-key map (kbd "c") #'my-project-dashboard-compile)
+    (define-key map (kbd "t") #'my-project-dashboard-test)
+    (define-key map (kbd "r") #'my-project-dashboard-run)
+    (define-key map (kbd "d") #'my-project-dashboard-dired)
+    (define-key map (kbd "k") #'my-project-dashboard-kill-buffers)
+    (define-key map (kbd "q") #'quit-window)
+
+    map))
+
+(defun my-project-dashboard--icon (kind)
+  (if (featurep 'nerd-icons)
+      (pcase kind
+        ('find    (nerd-icons-mdicon "nf-md-file_find" :v-adjust -0.05))
+        ('recent  (nerd-icons-mdicon "nf-md-history" :v-adjust -0.05))
+        ('buffer  (nerd-icons-mdicon "nf-md-tab" :v-adjust -0.05))
+        ('search  (nerd-icons-mdicon "nf-md-magnify" :v-adjust -0.05))
+        ('vc      (nerd-icons-mdicon "nf-md-source_branch" :v-adjust -0.05))
+        ('compile (nerd-icons-mdicon "nf-md-hammer_wrench" :v-adjust -0.05))
+        ('test    (nerd-icons-mdicon "nf-md-test_tube" :v-adjust -0.05))
+        ('run     (nerd-icons-mdicon "nf-md-play" :v-adjust -0.05))
+        ('dired   (nerd-icons-mdicon "nf-md-folder" :v-adjust -0.05))
+        ('kill    (nerd-icons-mdicon "nf-md-delete" :v-adjust -0.05))
+        (_ ""))
+    ""))
+
+(define-derived-mode my-project-dashboard-mode special-mode "Project Dashboard"
+  "Major mode for a Projectile project dashboard.")
+
+(defun my-project-dashboard--button-action (button)
+  (let ((command (button-get button 'my-project-command)))
+    (unless command
+      (user-error "No command associated with this button"))
+    (call-interactively command)))
+
+(defun my-project-dashboard--file-button-action (button)
+  (let ((file (button-get button 'my-project-file)))
+    (unless file
+      (user-error "No file associated with this button"))
+    (find-file file)))
+
+(defun my-project-dashboard--file-icon (file)
+  (if (fboundp 'nerd-icons-icon-for-file)
+      (concat (nerd-icons-icon-for-file file :v-adjust -0.05) " ")
+    ""))
+
+(defun my-project-dashboard--insert-action (key icon label command)
+  (insert key "  ")
+  (when (and icon (not (string-empty-p icon)))
+    (insert icon " "))
+  (insert-text-button label
+                      'follow-link t
+                      'face 'default
+                      'mouse-face 'highlight
+                      'my-project-command command
+                      'action #'my-project-dashboard--button-action)
+  (insert "\n"))
+
+(defun my-project-dashboard--recent-project-files (root count)
+  (let ((result nil)
+        (root-path (file-truename root)))
+    (dolist (file recentf-list)
+      (let ((full-path (expand-file-name file)))
+        (when (and (file-exists-p full-path)
+                   (file-in-directory-p (file-truename full-path)
+                                        root-path))
+          (push full-path result))))
+    (seq-take (nreverse result) count)))
+
+(defun my-project-dashboard--insert-recent-file (index file root)
+  (let ((relative-name (file-relative-name file root)))
+    (insert (format "%d  " index))
+    (insert (my-project-dashboard--file-icon file))
+    (insert-text-button relative-name
+                        'follow-link t
+                        'face 'default
+                        'mouse-face 'highlight
+                        'my-project-file file
+                        'action #'my-project-dashboard--file-button-action)
+    (insert "\n")))
+
+(defun my-project-dashboard ()
+  (interactive)
+  (let* ((root (projectile-project-root))
+         (name (projectile-project-name))
+         (buffer (get-buffer-create (format "*Project: %s*" name))))
+    ;; Important: switch normally instead of popping a side window.
+    (switch-to-buffer buffer)
+
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+
+      ;; Important: major mode first, then buffer-local variables.
+      (my-project-dashboard-mode)
+
+      (setq-local default-directory root)
+      (setq-local my-project-dashboard-root root)
+      (setq-local my-project-dashboard-name name)
+      (setq-local my-project-dashboard-recent-files
+                  (my-project-dashboard--recent-project-files
+                   root
+                   my-project-dashboard-recent-file-count))
+      (insert "\n\nMM\"\"\"\"\"\"\"`YM                   oo                     dP   \n")
+      (insert  "MM  mmmmm  M                                          88   \n")
+      (insert  "M'        .M 88d888b. .d8888b. dP .d8888b. .d8888b. d8888P \n")
+      (insert  "MM  MMMMMMMM 88'  `88 88'  `88 88 88ooood8 88'  `\"\"   88   \n")
+      (insert  "MM  MMMMMMMM 88       88.  .88 88 88.  ... 88.  ...   88   \n")
+      (insert  "MM  MMMMMMMM dP       `88888P' 88 `88888P' `88888P'   dP   \n")
+      (insert  "MMMMMMMMMMMM                   88                          \n")
+      (insert  "                               dP\n\n")
+      (insert (format "Project: %s\n" name))
+      (insert (format "Root:    %s\n\n" root))
+
+      (insert "Recent files\n")
+      (insert "------------\n")
+
+      (if my-project-dashboard-recent-files
+          (let ((index 1))
+            (dolist (file my-project-dashboard-recent-files)
+              (my-project-dashboard--insert-recent-file index file root)
+              (setq index (1+ index))))
+        (insert "No recent files for this project yet.\n"))
+
+      (insert "\n")
+      (insert "Actions\n")
+      (insert "-------\n")
+
+      (my-project-dashboard--insert-action "f" (my-project-dashboard--icon 'find)    "Find file" #'my-project-dashboard-find-file)
+      (my-project-dashboard--insert-action "e" (my-project-dashboard--icon 'recent)  "Recent file picker" #'my-project-dashboard-recent-file)
+      (my-project-dashboard--insert-action "b" (my-project-dashboard--icon 'buffer)  "Switch project buffer" #'my-project-dashboard-switch-buffer)
+      (my-project-dashboard--insert-action "s" (my-project-dashboard--icon 'search)  "Search / grep" #'my-project-dashboard-search)
+      (my-project-dashboard--insert-action "v" (my-project-dashboard--icon 'vc)      "Version control / Magit" #'my-project-dashboard-vc)
+      (my-project-dashboard--insert-action "c" (my-project-dashboard--icon 'compile) "Compile project" #'my-project-dashboard-compile)
+      (my-project-dashboard--insert-action "t" (my-project-dashboard--icon 'test)    "Test project" #'my-project-dashboard-test)
+      (my-project-dashboard--insert-action "r" (my-project-dashboard--icon 'run)     "Run project" #'my-project-dashboard-run)
+      (my-project-dashboard--insert-action "d" (my-project-dashboard--icon 'dired)   "Dired project root" #'my-project-dashboard-dired)
+      (my-project-dashboard--insert-action "k" (my-project-dashboard--icon 'kill)    "Kill project buffers" #'my-project-dashboard-kill-buffers)
+
+      (insert "\n")
+      (insert "Press 1-9 to open a recent file.\n")
+      (insert "Press an action key, click an item, or press RET on a button.\n"))))
+
+
+(provide 'my-project-dashboard)
+;; End of project dashboard
