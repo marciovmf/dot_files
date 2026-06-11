@@ -89,6 +89,7 @@
     tnoremap   <silent>   <c-F12>   <C-\><C-n>:FloatermToggle<CR>
 
   " -BBye ------------------------
+    Plug 'marciovmf/projection'
     Plug 'moll/vim-bbye'	
     map <c-k>k :Bdelete!<cr>
     command! Clear :%bd!
@@ -120,12 +121,17 @@
     Plug 'nvim-tree/nvim-web-devicons'
     Plug 'ryanoasis/vim-devicons'
 
+  " -Markdown preview -------------
+    Plug 'iamcco/markdown-preview.nvim.git'
+
+
   " -Colorscheme-------------------
   Plug 'ewk/blue_in_green'
   Plug 'habamax/vim-habamax'
   Plug 'Alligator/accent.vim'
   Plug 'jacoborus/tender.vim'
   Plug 'kxzk/skull-vim'
+  Plug 'projekt0n/github-nvim-theme'
 
 
   call plug#end()
@@ -153,9 +159,9 @@
 
   " LINE DRAGGING WITH ALT HJKL:
   nnoremap <A-j> :m .+1<CR>==
-  nnoremap <A-k> :m .-2<CR>==
-  inoremap <A-j> <Esc>:m .+1<CR>==gi
-  inoremap <A-k> <Esc>:m .-2<CR>==gi
+  noremap <A-k> :m .-2<CR>==
+  noremap <A-j> <Esc>:m .+1<CR>==gi
+  noremap <A-k> <Esc>:m .-2<CR>==gi
   vnoremap <A-j> :m '>+1<CR>gv=gv
   vnoremap <A-k> :m '<-2<CR>gv=gv
 
@@ -338,8 +344,8 @@ endfunction
   autocmd VimResized * :wincmd =
   
   " Rebuild
-  nmap <F9> :silent call Build()<cr>
-  nmap <F10> :silent call Rebuild()<cr>
+  "nmap <F9> :silent call Build()<cr>
+  "nmap <F10> :silent call Rebuild()<cr>
   nmap <script> <silent> <F4> :call ToggleQuickfix()<cr>
   
   " Quickfix
@@ -390,9 +396,10 @@ endfunction
     set fillchars+=vert:\ 
   endfunction
 
-  colo simple
+  colo jblow
   "set guifont=FiraCode\ Nerd\ Font:h9
-  set guifont=Fira\ Code:h9
+  "set guifont=Roboto\ Mono\ for\ Powerline:h11
+  set guifont=Cascadia\ Code:h11
   autocmd ColorScheme * call OnThemeReload()
 
 
