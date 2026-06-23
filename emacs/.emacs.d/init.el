@@ -1,23 +1,32 @@
-
+;;------------------------------------------------------------
+;; Marciovmf emacs config
+;;------------------------------------------------------------
 (defvar my-current-project-root nil)
+(add-hook 'emacs-lisp-mode-hook #'outline-minor-mode)
 (setq inhibit-startup-message t) ;Don't show splash screen
 (menu-bar-mode -1)               ;Flash when the bell rings
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (setq visible-bell t)
+;; Scroll only as much as needed when point leaves the window.
+(setq scroll-conservatively 101)
+(setq scroll-step 1)
+(setq scroll-margin 0)
 
-;; Enable line numbers on some modes
+;;; Enable line numbers on some modes
 (global-display-line-numbers-mode 1)
 (dolist (mode '(org-mode-hook term-mode-hook eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-;; Use ESC to cancel prompts (C-g)
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 
-;;------------------------------------------------------------
-;; Prevent generating backup and auto-save files everywhere.
-;; Instead, generate them within the .emacs.d/.tmp/ folder
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit); Use ESC to cancel prompts (C-g)
+(save-place-mode 1); remember cursor position in files
+(recentf-mode 1); remember recently opened files
+(savehist-mode 1); remember minibuffer history
+(setq desktop-restore-frames t) ; remember open frames
+
+;;; Backup and auto-save files
 ;;------------------------------------------------------------
 
 ;; Backup files are stored in .../.tmp/backups
@@ -38,16 +47,15 @@
 (unless package-archive-contents (package-refresh-contents))
 
 
-
-;; Initialize use-packages on non-linux platforms
+;;; Initialize use-packages on non-linux platforms
+;;------------------------------------------------------------
 (unless (package-installed-p 'use-package) (package-install 'use-package))
 (require 'use-package)
 (setq use-package-always-ensure t)
 
 (use-package command-log-mode)
 
-;;------------------------------------------------------------
-;; Theme, icons, fonts and modeline
+;;; Theme, icons, fonts and modeline
 ;;------------------------------------------------------------
 (use-package naysayer-theme :ensure t)
 (use-package doom-themes :ensure nil)
@@ -76,6 +84,7 @@
   (setq doom-modeline-percent-position '(-3 "%p"))
 
   ;; useful status
+  (use-package lsp-ui) 
   (setq doom-modeline-lsp t)
   (setq doom-modeline-selection-info t)
 
@@ -107,9 +116,16 @@
   :hook
   (dired-mode . nerd-icons-dired-mode))
 
+;; Cursor line highlight
+(global-hl-line-mode 1) ; highlight cursor line
+(set-face-attribute 'hl-line nil              
+		    :background "#003366"     ; background color
+		    :inherit nil
+		    :foreground 'unspecified  ; do not override foreground colors
+		    :underline nil)           ; do not underline the cursor line
 
-;; ------------------------------------------------------------
-;; C/C++ code formating
+
+;;; C/C++ code formating
 ;; ------------------------------------------------------------
 (require 'cc-mode)
 
@@ -118,9 +134,9 @@
  '("bsd"
    (c-basic-offset . 2)
    (indent-tabs-mode . nil)
+   (c-block-comment-prefix . "* ") ; New lines inside /* */ comments get "* ".
+   (c-auto-newline . nil) ; Do not auto-insert newlines after semicolons.
 
-   ;; Important: enable electric newlines around braces.
-   (c-auto-newline . t)
 
    ;; Put braces on their own lines.
    (c-hanging-braces-alist
@@ -160,57 +176,42 @@
        (arglist-intro . +)
        (arglist-close . 0)))))
 
-;; Enforce 80 character long lines
-(defvar marciovmf-c-line-limit 80)
-
-(defun marciovmf-c--first-long-line ()
-  (save-excursion
-    (goto-char (point-min))
-    (catch 'bad
-      (while (not (eobp))
-        (end-of-line)
-        (let ((col (current-column)))
-          (when (> col fill-column)
-            (throw 'bad (cons (line-number-at-pos) col))))
-        (forward-line 1))
-      nil)))
-
-(defun marciovmf-c-check-line-length ()
-  (let ((bad (marciovmf-c--first-long-line)))
-    (when bad
-      (goto-char (point-min))
-      (forward-line (1- (car bad)))
-      (user-error "Line %d is %d columns; limit is %d"
-                  (car bad) (cdr bad) fill-column))))
-
-(defun marciovmf-c-line-limit-setup ()
-  (setq-local fill-column marciovmf-c-line-limit)
-
-  ;; Visual marker at column 80.
-  (display-fill-column-indicator-mode 1)
-
-  ;; Auto-wrap comments.
-  (auto-fill-mode 1)
-
-  ;; Block save if any line is too long.
-  (add-hook 'before-save-hook
-            #'marciovmf-c-check-line-length
-            nil
-            t))
-
+(defun my-c-newline ()
+  "Insert a newline in C-like buffers.
+Inside /* */ comments, continue the comment with a stable leading star."
+  (interactive)
+  (let* ((ppss (syntax-ppss))
+         (comment-start (nth 8 ppss))
+         (inside-block-comment
+          (and (nth 4 ppss)
+               comment-start
+               (save-excursion
+                 (goto-char comment-start)
+                 (looking-at "/\\*"))))
+         (comment-column
+          (when inside-block-comment
+            (save-excursion
+              (goto-char comment-start)
+              (current-column)))))
+    (if inside-block-comment
+        (progn
+          (newline)
+          (delete-horizontal-space)
+          (indent-to (1+ comment-column))
+          (insert "* "))
+      (newline-and-indent))))
 
 (defun my-c-mode-setup ()
   (c-set-style "marciovmf-c")
   (setq-local c-basic-offset 2)
   (setq-local indent-tabs-mode nil)
-  (setq-local c-auto-newline t)
-  (marciovmf-c-line-limit-setup))
+  (setq-local c-auto-newline nil)
+  (local-set-key (kbd "RET") #'my-c-newline))
 
 (add-hook 'c-mode-hook #'my-c-mode-setup)
 (add-hook 'c++-mode-hook #'my-c-mode-setup)
 (add-hook 'objc-mode-hook #'my-c-mode-setup)
 
-;; 
 (defun my-c-like-word-syntax ()
   "Treat underscore as part of words."
   (modify-syntax-entry ?_ "w"))
@@ -223,9 +224,7 @@
 (add-hook 'cmake-mode-hook #'my-c-like-word-syntax)
 
 
-;; ------------------------------------------------------------
-;; which-key
-;; Built into Emacs 30+, installed as package on older Emacs
+;;; which-key
 ;; ------------------------------------------------------------
 
 (unless (or (package-installed-p 'which-key)
@@ -239,8 +238,7 @@
   (which-key-mode 1)
   (setq which-key-idle-delay 0.5))
 
-;; ------------------------------------------------------------
-;; Ivy + Counsel
+;;; Ivy + Counsel
 ;; ------------------------------------------------------------
 (use-package ivy :diminish :config (ivy-mode 1))
 (use-package ivy-rich :after ivy :config (ivy-rich-mode 1))
@@ -251,10 +249,8 @@
  'ivy-rich-switch-buffer-major-mode
  '(:width 20 :face error))
 
+;;; Sort buffer switcher: file buffers first, special buffers last
 ;; ------------------------------------------------------------
-;; Sort buffer switcher: file buffers first, special buffers last
-;; ------------------------------------------------------------
-
 (require 'cl-lib)
 
 (defun my-buffer-candidate-file-backed-p (candidate)
@@ -291,7 +287,6 @@ Within each group, preserve Emacs' normal buffer recency order."
   (setf (alist-get 'ivy-switch-buffer ivy-sort-functions-alist)
         #'my-ivy-sort-buffers-file-first))
 
-
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
 	 ;("C-<tab>" . counsel-switch-ibuffer)
@@ -301,8 +296,7 @@ Within each group, preserve Emacs' normal buffer recency order."
   :config
   (setq ivy-initial-inputs-alist nil)) ; Don't start searches with ^
 
-;;------------------------------------------------------------
-;; Projectile
+;;; Projectile
 ;;------------------------------------------------------------
 (use-package projectile
   :ensure t
@@ -318,8 +312,8 @@ Within each group, preserve Emacs' normal buffer recency order."
   ("C-x p" . projectile-command-map))
   (setq projectile-switch-project-action 'projectile-dired)
 
-;;------------------------------------------------------------
-;; Dashboard
+
+;;; Dashboard
 ;;------------------------------------------------------------
 (use-package dashboard
   :ensure t
@@ -344,8 +338,7 @@ Within each group, preserve Emacs' normal buffer recency order."
   :config (dashboard-setup-startup-hook))
 
 
-;; ------------------------------------------------------------
-;; clangd / eglot
+;;; clangd / eglot
 ;; ------------------------------------------------------------
 (use-package eglot
   :ensure t
@@ -405,7 +398,7 @@ Within each group, preserve Emacs' normal buffer recency order."
       (message "No diagnostics on this line"))))
 
 
-;; Completion popup
+;;; Completion popup
 (use-package corfu
   :ensure t
   :init
@@ -476,12 +469,14 @@ Within each group, preserve Emacs' normal buffer recency order."
      "02d422e5b99f54bd4516d4157060b874d14552fe613ea7047c4a5cfa1288cf4f"
      default))
  '(package-selected-packages
-   '(all-the-icons-ivy-rich cape cmake-mode command-log-mode corfu
-			    counsel counsel-projectile dashboard
-			    doom-modeline doom-themes eglot eldoc-box
-			    evil naysayer-theme nerd-icons-dired
-			    no-littering orderless page-break-lines
-			    projectile))
+   '(all-the-icons-ivy-rich cape cmake-font-lock command-log-mode corfu
+			    counsel-projectile dashboard doom-modeline
+			    doom-themes eglot eldoc-box evil fzf
+			    geben-helm-projectile ht lsp-ui lv
+			    magit-section markdown-mode naysayer-theme
+			    nerd-icons-dired nyan-mode orderless
+			    page-break-lines spinner transient
+			    ultra-scroll vertico with-editor))
  '(warning-suppress-types '((use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -491,11 +486,8 @@ Within each group, preserve Emacs' normal buffer recency order."
  )
 
 
+;;; Global keybindings
 ;;------------------------------------------------------------
-;; Global keybindings
-;;------------------------------------------------------------
-
-;; Keybindings
 (global-set-key (kbd "C-0") 'text-scale-set)                ; Reset text scale to default
 (global-set-key (kbd "C-<up>") 'text-scale-increase)        ; Increase text scale
 (global-set-key (kbd "C-<down>") 'text-scale-decrease)      ; Decrease text scale
@@ -506,7 +498,7 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 ;; compile command
 (setq projectile-project-compilation-cmd "cmake --build .build")
-
+(add-to-list 'auto-mode-alist '("\\.inl\\'" . c-mode)) ;; .inl files are considered C code
 ;; Compile current project
 (defun my-projectile-compile ()
   (interactive)
@@ -524,19 +516,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 (add-hook 'c-mode-common-hook #'hs-minor-mode)              ; Folding mode enabled for c source
 
-;; Misc configuration
-(save-place-mode 1)    ; remember cursor position in files
-(recentf-mode 1)       ; remember recently opened files
-(savehist-mode 1)      ; remember minibuffer history
-(setq desktop-restore-frames t) ; remember open frames
-
-;; Cursor line highlight
-(global-hl-line-mode 1) ; highlight cursor line
-(set-face-attribute 'hl-line nil              
-		    :background "#003366"     ; background color
-		    :inherit nil
-		    :foreground 'unspecified  ; do not override foreground colors
-		    :underline nil)           ; do not underline the cursor line
 
 ;; Kill all buffers
 (defun killall ()
@@ -554,7 +533,7 @@ Within each group, preserve Emacs' normal buffer recency order."
     (message "dashboard-open is not available")))
 
 
-;; Set window title with current project (if any) + full path of current file 
+;;; Set window title with current project (if any) + full path of current file 
 (defun my-frame-title ()
   (let* ((name
           (cond
@@ -583,11 +562,15 @@ Within each group, preserve Emacs' normal buffer recency order."
 (setq projectile-switch-project-action #'my-project-dashboard)
 (with-eval-after-load 'evil (evil-set-initial-state 'my-project-dashboard-mode 'motion))
 
-;; ------------------------------------------------------------
-;; Evil mode + custom normal mode keybindings
+;;; Evil mode + custom normal mode keybindings
 ;; ------------------------------------------------------------
 
-(use-package evil :ensure t :config (evil-mode 1))
+(use-package evil
+  :ensure t
+  :config
+  (evil-mode 1)
+  (evil-define-key 'insert c-mode-base-map
+    (kbd "RET") #'my-c-newline))
 
 (defun my-yank-current-buffer-file-path ()
   "Copy the full path of the current buffer's file."
@@ -626,4 +609,4 @@ Within each group, preserve Emacs' normal buffer recency order."
   (define-key my-evil-c-k-map (kbd "s") #'save-buffer)
   (define-key my-evil-c-k-map (kbd "0") #'dashboard-open))
 
-  ;; The End
+;;; end
