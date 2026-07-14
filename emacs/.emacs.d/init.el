@@ -43,6 +43,13 @@
 			 ("org" . "https://orgmode.org/elpa")
 			 ("elpa" . "https://elpa.gnu.org/packages/")))
 
+;; Some places block acess to package-archives. In that case, we can download this github repo and use it as source for the packages.
+;; https://github.com/ninrod/emacs-antiproxy
+;(setq package-archives '(("melpa" . "~/.emacs.d/elpa-mirror/melpa/")
+;                         ("org"   . "~/.emacs.d/elpa-mirror/org/")
+;                         ("gnu"   . "~/.emacs.d/elpa-mirror/gnu/")))
+
+
 (package-initialize)
 (unless package-archive-contents (package-refresh-contents))
 
