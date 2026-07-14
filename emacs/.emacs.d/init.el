@@ -567,6 +567,8 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 (use-package evil
   :ensure t
+  :init
+  (setq evil-want-C-u-scroll t)	
   :config
   (evil-mode 1)
   (evil-define-key 'insert c-mode-base-map
