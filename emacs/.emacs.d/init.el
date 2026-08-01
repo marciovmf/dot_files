@@ -34,7 +34,7 @@
 
 ;; Auto save files are stored in .../.tmp/auto-saves
 (make-directory (expand-file-name ".tmp/auto-saves/" user-emacs-directory) t)
-(setq auto-save-list-file-prefix (expand-file-name "/tmp/auto-saves/sessions" user-emacs-directory)
+(setq auto-save-list-file-prefix (expand-file-name ".tmp/auto-saves/sessions" user-emacs-directory)
       auto-save-file-name-transforms `((".*"  ,(expand-file-name ".tmp/auto-saves" user-emacs-directory) t )))
 
 ;; Initialize package sources
