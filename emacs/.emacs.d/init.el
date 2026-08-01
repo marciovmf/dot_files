@@ -34,14 +34,21 @@
 
 ;; Auto save files are stored in .../.tmp/auto-saves
 (make-directory (expand-file-name ".tmp/auto-saves/" user-emacs-directory) t)
-(setq auto-save-list-file-prefix (expand-file-name "/tmp/auto-saves/sessions/" user-emacs-directory)
-      auto-save-file-name-transforms `((".*"  ,(expand-file-name ".tmp/auto-saves/" user-emacs-directory) t )))
+(setq auto-save-list-file-prefix (expand-file-name "/tmp/auto-saves/sessions" user-emacs-directory)
+      auto-save-file-name-transforms `((".*"  ,(expand-file-name ".tmp/auto-saves" user-emacs-directory) t )))
 
 ;; Initialize package sources
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
 			 ("org" . "https://orgmode.org/elpa")
 			 ("elpa" . "https://elpa.gnu.org/packages/")))
+
+;; Some places block acess to package-archives. In that case, we can download this github repo and use it as source for the packages.
+;; https://github.com/ninrod/emacs-antiproxy
+;(setq package-archives '(("melpa" . "~/.emacs.d/elpa-mirror/melpa/")
+;                         ("org"   . "~/.emacs.d/elpa-mirror/org/")
+;                         ("gnu"   . "~/.emacs.d/elpa-mirror/gnu/")))
+
 
 (package-initialize)
 (unless package-archive-contents (package-refresh-contents))
@@ -218,10 +225,109 @@ Inside /* */ comments, continue the comment with a stable leading star."
 
 (add-hook 'c-mode-hook #'my-c-like-word-syntax)
 (add-hook 'c++-mode-hook #'my-c-like-word-syntax)
-(add-hook 'objc-mode-hoOk #'my-c-like-word-syntax)
+(add-hook 'objc-mode-hook #'my-c-like-word-syntax)
 (add-hook 'python-mode-hook #'my-c-like-word-syntax)
 (add-hook 'elisp-mode-hook #'my-c-like-word-syntax)
 (add-hook 'cmake-mode-hook #'my-c-like-word-syntax)
+
+;;; Custom folded comment blocks
+;;------------------------------------------------------------
+
+(require 'hideshow)
+(require 'subr-x)
+
+(defun my-hs-clean-comment-line (line)
+  "Remove C/C++ comment markers from LINE.
+Return nil for empty lines and decorative separator lines."
+  (let ((text (string-trim line)))
+    ;; Remove a leading comment marker.
+    (setq text
+          (cond
+           ((string-prefix-p "//" text)
+            (string-trim-left (substring text 2)))
+
+           ((string-prefix-p "/*" text)
+            (string-trim-left (substring text 2)))
+
+           ((string-prefix-p "*" text)
+            (string-trim-left (substring text 1)))
+
+           (t text)))
+
+    ;; Remove a closing block-comment marker.
+    (when (string-suffix-p "*/" text)
+      (setq text
+            (string-trim-right
+             (substring text 0 -2))))
+
+    ;; Ignore empty and decorative lines.
+    (unless (or (string-empty-p text)
+                (string-match-p "\\`[-=*_/#]+\\'" text))
+      text)))
+
+
+(defun my-hs-first-comment-content (begin end)
+  "Return the first meaningful comment line between BEGIN and END."
+  (catch 'content
+    (dolist (line
+             (split-string
+              (buffer-substring-no-properties begin end)
+              "\n"))
+      (when-let ((text (my-hs-clean-comment-line line)))
+        (throw 'content text)))
+    nil))
+
+
+(defun my-hs-comment-overlay (overlay)
+  "Show the first meaningful line when a comment OVERLAY is folded."
+  (when (and (eq (overlay-get overlay 'hs) 'comment)
+             (memq major-mode
+                   '(c-mode
+                     c++-mode
+                     objc-mode
+                     c-ts-mode
+                     c++-ts-mode)))
+    (save-excursion
+      ;; Hideshow initially starts comment overlays at the end of the
+      ;; first physical line. Move to that line's actual comment marker
+      ;; so decorative header lines can also be hidden.
+      (goto-char (overlay-start overlay))
+      (beginning-of-line)
+      (skip-chars-forward " \t")
+
+      (let* ((comment-begin (point))
+             (comment-end   (overlay-end overlay))
+             (line-comment  (looking-at-p "//"))
+             (block-comment (looking-at-p "/\\*"))
+             (content
+              (my-hs-first-comment-content
+               comment-begin
+               comment-end)))
+
+        (when (or line-comment block-comment)
+          ;; Include the original first line in the hidden region.
+          (move-overlay overlay comment-begin comment-end)
+
+          (overlay-put
+           overlay
+           'display
+           (propertize
+            (cond
+             (line-comment
+              (if content
+                  (format "// %s ..." content)
+                "// ..."))
+
+             (block-comment
+              (if content
+                  (format "/* %s ... */" content)
+                "/* ... */")))
+            'face 'font-lock-comment-face)))))))
+
+
+(setq hs-set-up-overlay #'my-hs-comment-overlay)
+
+(add-hook 'c-mode-common-hook #'hs-minor-mode)
 
 
 ;;; which-key
@@ -468,15 +574,7 @@ Within each group, preserve Emacs' normal buffer recency order."
      "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19"
      "02d422e5b99f54bd4516d4157060b874d14552fe613ea7047c4a5cfa1288cf4f"
      default))
- '(package-selected-packages
-   '(all-the-icons-ivy-rich cape cmake-font-lock command-log-mode corfu
-			    counsel-projectile dashboard doom-modeline
-			    doom-themes eglot eldoc-box evil fzf
-			    geben-helm-projectile ht lsp-ui lv
-			    magit-section markdown-mode naysayer-theme
-			    nerd-icons-dired nyan-mode orderless
-			    page-break-lines spinner transient
-			    ultra-scroll vertico with-editor))
+ '(package-selected-packages nil)
  '(warning-suppress-types '((use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -513,9 +611,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 (global-set-key (kbd "<f5>") #'my-projectile-compile)
 (global-set-key (kbd "S-<f5>") #'my-projectile-clean)
-
-(add-hook 'c-mode-common-hook #'hs-minor-mode)              ; Folding mode enabled for c source
-
 
 ;; Kill all buffers
 (defun killall ()
@@ -567,6 +662,8 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 (use-package evil
   :ensure t
+  :init
+  (setq evil-want-C-u-scroll t)	
   :config
   (evil-mode 1)
   (evil-define-key 'insert c-mode-base-map
