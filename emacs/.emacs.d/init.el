@@ -51,26 +51,32 @@
 
 
 (package-initialize)
-(unless package-archive-contents (package-refresh-contents))
+
+(defvar my-install-packages nil
+  "When non-nil, install missing packages during startup.")
+
+(when my-install-packages
+  (unless package-archive-contents
+    (package-refresh-contents))
+  (unless (package-installed-p 'use-package)
+    (package-install 'use-package)))
 
 
 ;;; Initialize use-packages on non-linux platforms
 ;;------------------------------------------------------------
-(unless (package-installed-p 'use-package) (package-install 'use-package))
 (require 'use-package)
-(setq use-package-always-ensure t)
+(setq use-package-always-ensure my-install-packages)
 
 (use-package command-log-mode)
 
 ;;; Theme, icons, fonts and modeline
 ;;------------------------------------------------------------
-(use-package naysayer-theme :ensure t)
+(use-package naysayer-theme)
 (use-package doom-themes :ensure nil)
 (add-to-list 'custom-theme-load-path "~/.emacs.d/custom_themes/")
 ;;(use-package doom-modeline :ensure t :init (doom-modeline-mode 1) :config (line-number-mode 1) (column-number-mode 1))
 
 (use-package doom-modeline
-  :ensure t
   :init
   ;; visual shape
   (setq doom-modeline-height 25)
@@ -111,25 +117,25 @@
 ;; This will install in the default fonts folder for Linux/macOS/BSDs
 ;; but for Windows this will download to the specified folder
 (use-package nerd-icons
-  :ensure t 
   :config
   (unless (find-font (font-spec :name "Nerd Icons"))
-    (nerd-icons-install-fonts
-     (when (eq system-type 'windows-nt)
-       "~/.emacs.d/nerd-icons/"))))
+    (if my-install-packages
+        (nerd-icons-install-fonts
+         (when (eq system-type 'windows-nt)
+           "~/.emacs.d/nerd-icons/"))
+      (message "Nerd Icons font is missing. Set my-install-packages to t to install it."))))
 
 (use-package nerd-icons-dired
-  :ensure t
   :hook
   (dired-mode . nerd-icons-dired-mode))
 
 ;; Cursor line highlight
 (global-hl-line-mode 1) ; highlight cursor line
-(set-face-attribute 'hl-line nil              
-		    :background "#003366"     ; background color
-		    :inherit nil
-		    :foreground 'unspecified  ; do not override foreground colors
-		    :underline nil)           ; do not underline the cursor line
+;;(set-face-attribute 'hl-line nil              
+;;		    :background "#003366"     ; background color
+;;		    :inherit nil
+;;		    :foreground 'unspecified  ; do not override foreground colors
+;;		    :underline nil)           ; do not underline the cursor line
 
 
 ;;; C/C++ code formating
@@ -333,9 +339,10 @@ Return nil for empty lines and decorative separator lines."
 ;;; which-key
 ;; ------------------------------------------------------------
 
-(unless (or (package-installed-p 'which-key)
-            (package-built-in-p 'which-key))
-  (package-install 'which-key))
+(when my-install-packages
+  (unless (or (package-installed-p 'which-key)
+              (package-built-in-p 'which-key))
+    (package-install 'which-key)))
 
 (use-package which-key
   :ensure nil
@@ -405,7 +412,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 ;;; Projectile
 ;;------------------------------------------------------------
 (use-package projectile
-  :ensure t
   :diminish projectile-mode
   :init
   (let ((work-path "c:/work/"))
@@ -422,7 +428,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 ;;; Dashboard
 ;;------------------------------------------------------------
 (use-package dashboard
-  :ensure t
   :init
   ;(setq dashboard-startup-banner 'logo)
   (setq dashboard-startup-banner "~/.emacs.d/way_of_emacs_transparent.png")
@@ -434,7 +439,6 @@ Within each group, preserve Emacs' normal buffer recency order."
   (setq dashboard-set-file-icons t)
   (setq initial-buffer-choice #'dashboard-open)
   (use-package page-break-lines
-    :ensure t
     :config
     (global-page-break-lines-mode 1))
   (setq dashboard-items '((recents . 5)
@@ -447,7 +451,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 ;;; clangd / eglot
 ;; ------------------------------------------------------------
 (use-package eglot
-  :ensure t
   :hook ((c-mode . eglot-ensure)
          (c++-mode . eglot-ensure))
   :config
@@ -506,7 +509,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 ;;; Completion popup
 (use-package corfu
-  :ensure t
   :init
   (global-corfu-mode)
   :custom
@@ -518,7 +520,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 ;; Extra completion sources
 (use-package cape
-  :ensure t
   :init
   ;; Useful generic completions.
   (add-to-list 'completion-at-point-functions #'cape-file)
@@ -527,7 +528,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 
 ;; Documentation popup
 (use-package eldoc-box
-  :ensure t
   :after eglot
   :bind
   (:map eglot-mode-map ("C-c h" . eldoc-box-help-at-point)))
@@ -661,7 +661,6 @@ Within each group, preserve Emacs' normal buffer recency order."
 ;; ------------------------------------------------------------
 
 (use-package evil
-  :ensure t
   :init
   (setq evil-want-C-u-scroll t)	
   :config
@@ -699,6 +698,7 @@ Within each group, preserve Emacs' normal buffer recency order."
   ;; C-k prefix bindings
   (define-key my-evil-c-k-map (kbd "k") #'kill-current-buffer)
   (define-key my-evil-c-k-map (kbd "f") #'counsel-projectile-find-file)
+  (define-key my-evil-c-k-map (kbd "g") #'counsel-rg)
   (define-key my-evil-c-k-map (kbd "b") #'counsel-switch-buffer)
   (define-key my-evil-c-k-map (kbd "y") #'my-yank-current-buffer-file-path)
   (define-key my-evil-c-k-map (kbd "p") #'projectile-switch-project)
